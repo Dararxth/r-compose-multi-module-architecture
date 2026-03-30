@@ -1,4 +1,4 @@
-package com.rxth.mutimodule
+package com.rxth.multimodule
 
 import org.junit.Test
 

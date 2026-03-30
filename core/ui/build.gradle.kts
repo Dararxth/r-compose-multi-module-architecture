@@ -1,10 +1,10 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "com.rxth.multimodule"
+    namespace = "com.rxth.multimodule.core.ui"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,13 +12,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.rxth.multimodule"
-        minSdk = 31
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        minSdk = 24
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -33,9 +30,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-    buildFeatures {
-        compose = true
     }
 }
 
@@ -55,12 +49,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    implementation(libs.voyager.navigator)
-    implementation(libs.voyager.screenmodel)
-    implementation(libs.voyager.koin)
-    implementation(libs.voyager.tab.navigator)
-    implementation(libs.voyager.transitions)
-
-    implementation(project(":core:ui"))
 }

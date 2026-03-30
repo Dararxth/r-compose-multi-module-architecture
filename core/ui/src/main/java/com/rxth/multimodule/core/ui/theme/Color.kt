@@ -1,4 +1,4 @@
-package com.rxth.mutimodule.ui.theme
+package com.rxth.multimodule.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
