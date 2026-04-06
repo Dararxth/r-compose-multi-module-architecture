@@ -4,8 +4,6 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.rxth.multimodule.SampleScreen
-import com.rxth.multimodule.core.navigation.Navigator
-import com.rxth.multimodule.core.navigation.router.AppNavKey
 import com.rxth.multimodule.feature.detail.AnotherDetailScreen
 import com.rxth.multimodule.feature.detail.DetailScreen
 import com.rxth.multimodule.feature.home.presentation.HomeScreen

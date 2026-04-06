@@ -69,7 +69,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(project(":core:ui"))
-    implementation(project(":core:navigation"))
+    implementation(project(":core:common"))
+    implementation(project(":core:network"))
     implementation(project(":feature:home"))
     implementation(project(":feature:detail"))
 }

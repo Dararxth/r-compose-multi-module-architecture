@@ -39,11 +39,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
-import com.rxth.multimodule.core.navigation.Navigator
-import com.rxth.multimodule.core.navigation.rememberNavigator
-import com.rxth.multimodule.core.navigation.router.AppNavKey
 import com.rxth.multimodule.core.ui.theme.AppMaterialTheme
+import com.rxth.multimodule.navigation.AppNavKey
 import com.rxth.multimodule.navigation.AppNavigation
+import com.rxth.multimodule.navigation.Navigator
+import com.rxth.multimodule.navigation.rememberNavigator
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
