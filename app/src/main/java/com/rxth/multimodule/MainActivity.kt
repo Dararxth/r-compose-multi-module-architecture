@@ -4,77 +4,53 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.navigation3.ui.NavDisplay
-import com.rxth.multimodule.core.ui.ThemeManager
-import com.rxth.multimodule.core.ui.ThemeMode
 import com.rxth.multimodule.core.ui.theme.AppMaterialTheme
-import com.rxth.multimodule.feature.detail.AnotherDetailScreen
-import com.rxth.multimodule.feature.detail.DetailScreen
 import com.rxth.multimodule.feature.home.HomeScreen
+import com.rxth.multimodule.feature.home.SideBarItem
+import com.rxth.multimodule.navigation.AppNavKey
+import com.rxth.multimodule.navigation.AppNavigation
+import com.rxth.multimodule.navigation.rememberNavigator
+import kotlin.text.get
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val themeMode by ThemeManager.theme.collectAsState()
 
-            val isDark = when (themeMode) {
-                ThemeMode.DARK -> true
-                ThemeMode.LIGHT -> false
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-            }
-
-            AnimatedContent(
-                targetState = isDark,
-                transitionSpec = {
-                    fadeIn(tween(400)) + scaleIn(initialScale = 0.98f) togetherWith
-                            fadeOut(tween(300))
-                },
-                label = "theme_switch"
-            ) { dark ->
-                AppMaterialTheme(darkTheme = dark) {
+            AppMaterialTheme() {
+                Scaffold(modifier = Modifier.fillMaxSize()) {
                     val navigator = rememberNavigator()
-
-                    val entryProvider = entryProvider<NavKey> {
-                        entry<Dest.Home> {
-                            HomeScreen(
-                                onNavigateToDetail = { id ->
-                                    navigator.navigate(Dest.Detail(id))
+                    val entryProvider = remember(navigator) { AppNavigation(navigator).get() }
+                    Box(modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it)) {
+                        HomeScreen(
+                            onMenuClick = {
+                                when(it) {
+                                    SideBarItem.HOME -> {
+                                        navigator.navigate(AppNavKey.Home)
+                                    }
+//                                    SideBarItem.PROFILE -> TODO()
+//                                    SideBarItem.SETTINGS -> TODO()
+                                    else -> navigator.navigate(AppNavKey.Detail(1))
                                 }
-                            )
-                        }
-                        entry<Dest.Detail> { key ->
-                            DetailScreen(
-                                id = key.id,
+                            }
+                        ) {
+                            NavDisplay(
+                                backStack = navigator.backStack,
                                 onBack = { navigator.goBack() },
-                                onNext = { navigator.navigate(Dest.AnotherDetail(key.id)) }
-                            )
-                        }
-                        entry<Dest.AnotherDetail> { key ->
-                            AnotherDetailScreen(
-                                id = key.id,
-                                onBack = { navigator.goBack() }
+                                entryProvider = entryProvider
                             )
                         }
                     }
-
-                    NavDisplay(
-                        backStack = navigator.backStack,
-                        onBack = { navigator.goBack() },
-                        entryProvider = entryProvider
-                    )
                 }
             }
         }
