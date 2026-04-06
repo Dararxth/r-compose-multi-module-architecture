@@ -1,9 +1,10 @@
-package com.rxth.multimodule.navigation
+package com.rxth.multimodule.core.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
+import com.rxth.multimodule.core.navigation.router.AppNavKey
 
 class Navigator(
     val backStack: MutableList<NavKey>
@@ -12,15 +13,27 @@ class Navigator(
         backStack.add(dest)
     }
 
-    fun goBack() {
+    fun navigate(dest: List<NavKey>) {
+        dest.forEach {
+            backStack.add(it)
+        }
+    }
+
+    fun pop() {
         if (backStack.size > 1) {
+            backStack.removeAt(backStack.size - 1)
+        }
+    }
+
+    fun popAll() {
+        while (backStack.size > 1) {
             backStack.removeAt(backStack.size - 1)
         }
     }
 }
 
 @Composable
-fun rememberNavigator(startDestination: NavKey = AppNavKey.Home): Navigator {
+fun rememberNavigator(startDestination: NavKey = AppNavKey.Dashboard): Navigator {
     val backStack = rememberNavBackStack(startDestination)
     return remember(backStack) { Navigator(backStack) }
 }

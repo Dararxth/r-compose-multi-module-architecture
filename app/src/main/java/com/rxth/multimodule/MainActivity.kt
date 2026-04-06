@@ -4,55 +4,172 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
+import com.rxth.multimodule.core.navigation.Navigator
+import com.rxth.multimodule.core.navigation.rememberNavigator
+import com.rxth.multimodule.core.navigation.router.AppNavKey
 import com.rxth.multimodule.core.ui.theme.AppMaterialTheme
-import com.rxth.multimodule.feature.home.HomeScreen
-import com.rxth.multimodule.feature.home.SideBarItem
-import com.rxth.multimodule.navigation.AppNavKey
 import com.rxth.multimodule.navigation.AppNavigation
-import com.rxth.multimodule.navigation.rememberNavigator
-import kotlin.text.get
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            AppMaterialTheme {
+                // Track the currently selected top-level destination
+                var selectedTab by retain { mutableStateOf<NavKey>(AppNavKey.Dashboard) }
 
-            AppMaterialTheme() {
-                Scaffold(modifier = Modifier.fillMaxSize()) {
-                    val navigator = rememberNavigator()
-                    val entryProvider = remember(navigator) { AppNavigation(navigator).get() }
-                    Box(modifier = Modifier
-                        .fillMaxSize()
-                        .padding(it)) {
-                        HomeScreen(
-                            onMenuClick = {
-                                when(it) {
-                                    SideBarItem.HOME -> {
-                                        navigator.navigate(AppNavKey.Home)
-                                    }
-//                                    SideBarItem.PROFILE -> TODO()
-//                                    SideBarItem.SETTINGS -> TODO()
-                                    else -> navigator.navigate(AppNavKey.Detail(1))
+                val dashboardNavigator = rememberNavigator(AppNavKey.Dashboard)
+                val transactionsNavigator = rememberNavigator(AppNavKey.Transactions)
+                val reportsNavigator = rememberNavigator(AppNavKey.Reports)
+                val profileNavigator = rememberNavigator(AppNavKey.Profile)
+
+
+                val appNavigator = when (selectedTab) {
+                    AppNavKey.Dashboard -> dashboardNavigator
+                    AppNavKey.Transactions -> transactionsNavigator
+                    AppNavKey.Reports -> reportsNavigator
+                    AppNavKey.Profile -> profileNavigator
+                    else -> dashboardNavigator
+                }
+
+                val entryProvider = remember(appNavigator) {
+                    AppNavigation(
+                        navigator = appNavigator,
+                        onSwitchTabs = { tabKey, destKey ->
+                            selectedTab = tabKey
+                            if (destKey != null) {
+                                val targetNavigator = when (tabKey) {
+                                    AppNavKey.Dashboard -> dashboardNavigator
+                                    AppNavKey.Transactions -> transactionsNavigator
+                                    AppNavKey.Reports -> reportsNavigator
+                                    AppNavKey.Profile -> profileNavigator
+                                    else -> null
                                 }
+                                targetNavigator?.navigate(destKey)
                             }
+                        }
+                    ).get()
+                }
+
+                val navItems = remember {
+                    listOf(
+                        NavigationItem("Dashboard", Icons.Default.Dashboard, AppNavKey.Dashboard),
+                        NavigationItem(
+                            "Transactions",
+                            Icons.Default.History,
+                            AppNavKey.Transactions
+                        ),
+                        NavigationItem("Reports", Icons.Default.Analytics, AppNavKey.Reports),
+                        NavigationItem("Profile", Icons.Default.Person, AppNavKey.Profile),
+                    )
+                }
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                    ) {
+                        NavigationRail(
+                            modifier = Modifier.fillMaxHeight(),
+                            containerColor = Color.Blue.copy(alpha = 0.05f)
                         ) {
-                            NavDisplay(
-                                backStack = navigator.backStack,
-                                onBack = { navigator.goBack() },
-                                entryProvider = entryProvider
-                            )
+                            navItems.forEach { item ->
+                                NavigationRailItem(
+                                    selected = selectedTab == item.key,
+                                    onClick = {
+                                        if (selectedTab != item.key) {
+                                            selectedTab = item.key
+                                        } else {
+                                            /**while (currentNavigator.backStack.size > 1) {
+                                            currentNavigator.goBack()
+                                            }**/
+                                        }
+                                    },
+                                    icon = {
+                                        Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = item.label
+                                        )
+                                    },
+                                    label = { Text(item.label) }
+                                )
+                            }
+                        }
+
+
+                        key(selectedTab) {
+                            RootContent(appNavigator, entryProvider)
                         }
                     }
                 }
+
             }
         }
     }
+
+    @Composable
+    private fun RowScope.RootContent(
+        appNavigator: Navigator,
+        entryProvider: (NavKey) -> NavEntry<NavKey>
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clipToBounds() // Prevents animations from overlapping
+        ) {
+            NavDisplay(
+                backStack = appNavigator.backStack,
+                onBack = { appNavigator.pop() },
+                entryProvider = entryProvider,
+                transitionSpec = { appDefaultTransition },
+                popTransitionSpec = { appDefaultTransition },
+                predictivePopTransitionSpec = { appDefaultTransition }
+            )
+        }
+    }
+
+    private val appDefaultTransition =
+        (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
 }
+
+private data class NavigationItem(
+    val label: String,
+    val icon: ImageVector,
+    val key: NavKey
+)

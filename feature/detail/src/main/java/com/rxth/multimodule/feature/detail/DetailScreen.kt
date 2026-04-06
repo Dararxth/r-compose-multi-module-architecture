@@ -40,7 +40,7 @@ fun DetailScreen(id: Int, onBack: () -> Unit, onNext: () -> Unit) {
             Button(onClick = {
                 onNext()
             }) {
-                Text("Go Next")
+                Text("Go to Txn Tabs")
             }
         }
     }

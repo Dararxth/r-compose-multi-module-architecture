@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AnotherDetailScreen(id: Int, onBack: () -> Unit) {
+fun AnotherDetailScreen(id: Int, onBack: () -> Unit, tD: () -> Unit) {
 
     Column(
         modifier = Modifier
@@ -35,6 +35,10 @@ fun AnotherDetailScreen(id: Int, onBack: () -> Unit) {
 
         Button(onClick = onBack) {
             Text("Go Back")
+        }
+
+        Button(onClick = tD) {
+            Text("To Dashboard")
         }
 
 

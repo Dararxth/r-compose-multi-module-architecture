@@ -25,5 +25,6 @@ dependencyResolutionManagement {
 rootProject.name = "multi-module-compose-by-rxth"
 include(":app")
 include(":core:ui")
+include(":core:navigation")
 include(":feature:home")
 include(":feature:detail")

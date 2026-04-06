@@ -1,6 +1,5 @@
 package com.rxth.multimodule.feature.home
 
-import android.view.RoundedCorner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -12,7 +11,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,9 +28,7 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -48,12 +44,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation3.ui.NavDisplay
-import kotlin.enums.EnumEntries
 
 enum class SideBarItem(
     val title: String,
@@ -66,15 +58,16 @@ enum class SideBarItem(
 
 @Composable
 fun HomeScreen(
-    onMenuClick: (SideBarItem) -> Unit
-    ,content: @Composable () -> Unit) {
+    currentMenu: String,
+    onMenuClick: (SideBarItem) -> Unit, content: @Composable () -> Unit
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         var isExpanded by remember { mutableStateOf(true) }
 
         Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            SideBarUi(isExpanded, onMenuClick)
+            SideBarUi(currentMenu, isExpanded, onMenuClick)
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -92,6 +85,7 @@ fun HomeScreen(
 
 @Composable
 private fun SideBarUi(
+    currentMenu: String,
     isExpanded: Boolean,
     onMenuClick: (SideBarItem) -> Unit
 ) {
@@ -132,10 +126,20 @@ private fun SideBarUi(
             ) {
                 items(sideBarItems.size) { index ->
                     val item = sideBarItems[index]
+                    val isSelected = item.name == currentMenu
                     Row(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable{
-                            onMenuClick(item)
-                        }.padding(vertical = 10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable {
+                                onMenuClick(item)
+                            }
+                            .background(
+                                if (isSelected) Color.Blue.copy(alpha = 0.03f) else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .padding(vertical = 10.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -143,7 +147,11 @@ private fun SideBarUi(
                             modifier = Modifier.width(35.dp),
                             imageVector = item.icon,
                             contentDescription = null,
-                            colorFilter = ColorFilter.tint(color = Color(0xFF8F8F8F))
+                            colorFilter = ColorFilter.tint(
+                                color = if (isSelected) Color.Blue.copy(
+                                    alpha = 0.5f
+                                ) else Color(0xFF8F8F8F)
+                            )
                         )
                         AnimatedVisibility(
                             visible = isExpanded,
@@ -155,7 +163,9 @@ private fun SideBarUi(
                                 maxLines = 1,
                                 modifier = Modifier.basicMarquee(),
                                 fontSize = 16.sp,
-                                color = Color(0xFF8F8F8F)
+                                color = if (isSelected) Color.Blue.copy(alpha = 0.6f) else Color(
+                                    0xFF8F8F8F
+                                )
                             )
                         }
                     }
