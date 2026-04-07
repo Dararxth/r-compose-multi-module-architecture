@@ -68,6 +68,10 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.kotlinx.serialization.json)
 
+    // Koin BOM
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
     implementation(project(":core:ui"))
     implementation(project(":core:common"))
     implementation(project(":core:network"))

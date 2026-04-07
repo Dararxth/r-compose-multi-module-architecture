@@ -47,5 +47,18 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.kotlinx.serialization.json)
 
+    // Koin
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
+    // Networking
+    implementation(libs.retrofit.core)
+    implementation(libs.okhttp.core)
+    implementation(libs.gson)
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
     implementation(project(":core:ui"))
+    implementation(project(":core:common"))
+    implementation(project(":core:network"))
 }
