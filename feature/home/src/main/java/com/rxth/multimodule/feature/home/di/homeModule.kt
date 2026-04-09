@@ -7,8 +7,11 @@ import com.rxth.multimodule.feature.home.domain.repository.HomeRepository
 import com.rxth.multimodule.feature.home.domain.usecase.GetUpComingMovieUseCase
 import com.rxth.multimodule.feature.home.presentation.viewmodel.HomeScreenViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import retrofit2.Retrofit
 
@@ -17,12 +20,15 @@ val homeModule = module {
         get<Retrofit>(named(NetworkConstance.DEFAULT_RETROFIT)).create(HomeApiInterface::class.java)
     }
 
-    single <HomeRepository> {
-        HomeRepositoryImpl(get())
-    }
+
+    singleOf(
+        ::HomeRepositoryImpl
+    ) bind HomeRepository::class
+
 
     factoryOf(::GetUpComingMovieUseCase)
-    viewModel {
-        HomeScreenViewModel(get()) // inject your usecase here
-    }
+    viewModelOf(
+        ::HomeScreenViewModel
+
+    )
 }

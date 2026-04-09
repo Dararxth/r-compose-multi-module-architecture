@@ -1,6 +1,5 @@
 package com.rxth.multimodule.feature.home.data.repository
 
-import android.util.Log
 import com.rxth.multimodule.feature.home.data.dto.UpComingMoviesDto
 import com.rxth.multimodule.feature.home.data.remote.HomeApiInterface
 import com.rxth.multimodule.feature.home.domain.repository.HomeRepository

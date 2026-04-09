@@ -99,40 +99,11 @@ class MainActivity : ComponentActivity() {
                         NavigationItem("Profile", Icons.Default.Person, AppNavKey.Profile),
                     )
                 }
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Box(modifier = Modifier.fillMaxSize()) {
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding)
                     ) {
-                        NavigationRail(
-                            modifier = Modifier.fillMaxHeight(),
-                            containerColor = Color.Blue.copy(alpha = 0.05f)
-                        ) {
-                            navItems.forEach { item ->
-                                NavigationRailItem(
-                                    selected = selectedTab == item.key,
-                                    onClick = {
-                                        if (selectedTab != item.key) {
-                                            selectedTab = item.key
-                                        } else {
-                                            /**while (currentNavigator.backStack.size > 1) {
-                                            currentNavigator.goBack()
-                                            }**/
-                                        }
-                                    },
-                                    icon = {
-                                        Icon(
-                                            imageVector = item.icon,
-                                            contentDescription = item.label
-                                        )
-                                    },
-                                    label = { Text(item.label) }
-                                )
-                            }
-                        }
-
-
                         key(selectedTab) {
                             RootContent(appNavigator, entryProvider)
                         }
@@ -168,7 +139,7 @@ class MainActivity : ComponentActivity() {
         (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
 }
 
-private data class NavigationItem(
+data class NavigationItem(
     val label: String,
     val icon: ImageVector,
     val key: NavKey

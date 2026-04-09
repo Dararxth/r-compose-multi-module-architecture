@@ -56,7 +56,6 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.okhttp.core)
     implementation(libs.gson)
-    implementation("io.coil-kt:coil-compose:2.4.0")
 
     implementation(project(":core:ui"))
     implementation(project(":core:common"))

@@ -8,17 +8,16 @@ class AuthInterceptor() : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        val originalHttpUrl = originalRequest.url
 
         val token = BuildConfig.ACCESS_TOKEN
-        val apiKey = BuildConfig.API_KEY
-        val url = originalHttpUrl.newBuilder()
-            .addQueryParameter("api_key", apiKey)
+//        val originalHttpUrl = originalRequest.url
+//        val apiKey = BuildConfig.API_KEY
+//        val url = originalHttpUrl.newBuilder()
+//            .addQueryParameter("api_key", apiKey)
 
         val newRequest = originalRequest.newBuilder()
-          //  .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $token")
             .header("Accept", "application/json")
-            .url(url.build())
             .build()
 
         return chain.proceed(newRequest)

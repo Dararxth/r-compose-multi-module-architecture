@@ -49,4 +49,9 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    api("androidx.constraintlayout:constraintlayout-compose:1.1.0")
+    api(libs.haze.materials)
+    api(libs.coil.compose)
+    api(libs.haze.android)
 }

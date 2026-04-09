@@ -6,6 +6,7 @@ import com.rxth.multimodule.feature.home.di.homeModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
 class MyApp: Application() {
 
@@ -13,13 +14,14 @@ class MyApp: Application() {
         super.onCreate()
         startKoin {
             androidContext(this@MyApp)
-            androidLogger()
+            androidLogger(Level.DEBUG)
             modules(
                 listOf(
                     networkModule,
                     homeModule
                 )
             )
+
         }
     }
 
