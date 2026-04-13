@@ -87,18 +87,6 @@ class MainActivity : ComponentActivity() {
                     ).get()
                 }
 
-                val navItems = remember {
-                    listOf(
-                        NavigationItem("Dashboard", Icons.Default.Dashboard, AppNavKey.Dashboard),
-                        NavigationItem(
-                            "Transactions",
-                            Icons.Default.History,
-                            AppNavKey.Transactions
-                        ),
-                        NavigationItem("Reports", Icons.Default.Analytics, AppNavKey.Reports),
-                        NavigationItem("Profile", Icons.Default.Person, AppNavKey.Profile),
-                    )
-                }
                 Box(modifier = Modifier.fillMaxSize()) {
                     Row(
                         modifier = Modifier
