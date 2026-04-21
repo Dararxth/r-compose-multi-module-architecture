@@ -1,7 +1,9 @@
 package com.rxth.multimodule.feature.home.presentation
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -11,9 +13,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,9 +71,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.rxth.multimodule.core.network.RemoteHelper.getImagePath
 import com.rxth.multimodule.feature.home.R
 import com.rxth.multimodule.feature.home.domain.model.Movie
@@ -85,7 +89,9 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToDetails: (Movie) -> Unit
+    shareTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    onNavigateToDetails: (Movie, String) -> Unit
 ) {
     val viewModel: HomeScreenViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -104,6 +110,10 @@ fun HomeScreen(
                 }
             }
     }
+
+    var selectedItem by remember { mutableStateOf<Pair<String, Movie?>>(Pair("", null)) }
+    val rootHazeState = rememberHazeState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -115,7 +125,6 @@ fun HomeScreen(
             contentColor = Color.Transparent
         ) { padding ->
             val topBarHeight = padding.calculateTopPadding() + 64.dp
-            val rootHazeState = rememberHazeState()
 
             Box(
                 modifier = Modifier
@@ -137,25 +146,59 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(topBarHeight))
 
                         MoviesListUi(
+                            selectedItem = selectedItem.second,
                             listMovies = uiState.upComingMovies?.results.orEmpty(),
                             header = "Coming Soon!",
-                            onMovieClick = onNavigateToDetails
-                        )
+                            listId = "coming_soon",
+                            onMovieClick = onNavigateToDetails,
+                            shareTransitionScope = shareTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ) {
+                            selectedItem = it
+                        }
                         MoviesListUi(
+                            selectedItem = selectedItem.second,
                             listMovies = uiState.nowPlayingMovies?.results.orEmpty(),
                             header = "Now Playing",
-                            onMovieClick = onNavigateToDetails
-                        )
+                            listId = "now_playing",
+                            onMovieClick = onNavigateToDetails,
+                            shareTransitionScope = shareTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ) {
+                            selectedItem = it
+                        }
                         MoviesListUi(
+                            selectedItem = selectedItem.second,
                             listMovies = uiState.popularMovies?.results.orEmpty(),
                             header = "Popular",
-                            onMovieClick = onNavigateToDetails
-                        )
+                            listId = "popular",
+                            onMovieClick = onNavigateToDetails,
+                            shareTransitionScope = shareTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope
+                        ) {
+                            selectedItem = it
+                        }
                         Spacer(modifier = Modifier.height(padding.calculateBottomPadding()))
                     }
                 }
 
-                AppBar(isScrolled, rootHazeState, padding)
+                AppBar(
+                    isScrolled = isScrolled,
+                    haze = rootHazeState,
+                    padding = padding,
+                    shareTransitionScope = shareTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope
+                )
+
+                with(shareTransitionScope) {
+                    MoviePopUp(
+                        haze = rootHazeState,
+                        selectedItem = selectedItem,
+                        onConfirmClick = {
+                            selectedItem = Pair("", null)
+                        }
+                    )
+                }
             }
         }
     }
@@ -165,7 +208,9 @@ fun HomeScreen(
 private fun AppBar(
     isScrolled: Boolean,
     haze: HazeState,
-    padding: PaddingValues
+    padding: PaddingValues,
+    shareTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
 
     val animateScale = animateFloatAsState(
@@ -201,46 +246,46 @@ private fun AppBar(
         colors = CardDefaults.cardColors(Color.Transparent)
 
     ) {
-        SharedTransitionLayout {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+        ) {
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(
-                            top = padding.calculateTopPadding(),
-                            start = 15.dp,
-                            end = 15.dp
-                        )
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Text(
-                        text = "For Puthik",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                    .padding(
+                        top = padding.calculateTopPadding(),
+                        start = 15.dp,
+                        end = 15.dp
                     )
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
 
-                    Row(
-                        modifier = Modifier,
-                        verticalAlignment = Alignment.CenterVertically
+                Text(
+                    text = "For Puthik",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                Row(
+                    modifier = Modifier,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(25.dp)
+                    )
+                    AnimatedVisibility(
+                        visible = !isSearch
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Notifications,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(25.dp)
-                        )
-                        AnimatedVisibility(
-                            visible = !isSearch
-                        ) {
-                            Row {
-                                Spacer(Modifier.width(8.dp))
+                        Row {
+                            Spacer(Modifier.width(8.dp))
+                            with(shareTransitionScope) {
                                 Icon(
                                     imageVector = Icons.Outlined.Search,
                                     contentDescription = null,
@@ -255,22 +300,27 @@ private fun AppBar(
                                 )
                             }
                         }
-                        Spacer(Modifier.width(8.dp))
-                        Image(
-                            painter = painterResource(R.drawable.ic_profile),
-                            contentDescription = null,
-                            modifier = Modifier.size(25.dp).clip(CircleShape)
-                        )
                     }
+                    Spacer(Modifier.width(8.dp))
+                    Image(
+                        painter = painterResource(R.drawable.ic_profile),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(25.dp)
+                            .clip(CircleShape)
+                    )
                 }
-                AnimatedVisibility(visible = isSearch) {
+            }
+            AnimatedVisibility(visible = isSearch) {
+                with(shareTransitionScope) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 15.dp)
                             .sharedBounds(
                                 rememberSharedContentState("search"),
-                                animatedVisibilityScope = this
+                                animatedVisibilityScope = this@AnimatedVisibility
+
                             )
                     ) {
 
@@ -323,12 +373,73 @@ private fun AppBar(
                         }
                     }
                 }
-                AnimatedVisibility(
-                    visible = isScrolled && !isSearch,
-                    enter = fadeIn() + slideInHorizontally(),
-                    exit = fadeOut() + slideOutHorizontally()
+            }
+            AnimatedVisibility(
+                visible = isScrolled && !isSearch,
+                enter = fadeIn() + slideInHorizontally(),
+                exit = fadeOut() + slideOutHorizontally()
+            ) {
+                MovieCategories()
+            }
+        }
+    }
+}
+
+@Composable
+fun SharedTransitionScope.MoviePopUp(
+    haze: HazeState,
+    selectedItem: Pair<String, Movie?>,
+    modifier: Modifier = Modifier,
+    onConfirmClick: () -> Unit
+) {
+    val movie = selectedItem.second
+    val listId = selectedItem.first
+
+    AnimatedContent(
+        modifier = modifier,
+        targetState = movie,
+        transitionSpec = {
+            fadeIn(tween(300)) togetherWith fadeOut(tween(300))
+        },
+        label = "MoviePopUp"
+    ) { targetMovie ->
+        if (targetMovie != null) {
+            val image = getImagePath(targetMovie.posterPath)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                // Dimmed background overlay
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.7f))
+                        .clickable { onConfirmClick() }
+                )
+
+                // Pop-up Card Container
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .sharedBounds(
+                            rememberSharedContentState(key = "movie-${listId}-${targetMovie.posterPath}-bound"),
+                            animatedVisibilityScope = this@AnimatedContent,
+                            clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(20.dp))
+                        )
+                        .clip(RoundedCornerShape(20.dp))
                 ) {
-                    MovieCategories()
+                    Image(
+                        painter = rememberAsyncImagePainter(image),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 500.dp)
+                            .sharedElement(
+                                rememberSharedContentState(key = "movie-${listId}-${targetMovie.posterPath}"),
+                                animatedVisibilityScope = this@AnimatedContent
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
                 }
             }
         }
@@ -377,10 +488,15 @@ private fun MovieCategories() {
 
 @Composable
 private fun MoviesListUi(
+    selectedItem: Movie?,
     listMovies: List<Movie>,
     header: String,
+    listId: String,
     modifier: Modifier = Modifier,
-    onMovieClick: (Movie) -> Unit
+    onMovieClick: (Movie, String) -> Unit,
+    shareTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    onLongPressed: (Pair<String, Movie?>) -> Unit
 ) {
     if (listMovies.isEmpty()) return
     Column(
@@ -410,20 +526,35 @@ private fun MoviesListUi(
 
                 val item = listMovies[it]
                 val thumbnail = getImagePath(item.posterPath)
-                ConstraintLayout(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .wrapContentWidth().clickable {
-                            onMovieClick(item) // 👈 add this
-                        }
-                ) {
-                    AsyncImage(
-                        model = thumbnail,
-                        contentDescription = null,
+
+                with(shareTransitionScope) {
+                    Box(
                         modifier = Modifier
-                            .width(180.dp),
-                        contentScale = ContentScale.Crop
-                    )
+                            .clip(RoundedCornerShape(20.dp))
+                            .wrapContentWidth()
+                            .combinedClickable(
+                                onClick = { onMovieClick(item, listId) },
+                                onLongClick = { onLongPressed(Pair(listId, item)) },
+                            )
+                            .sharedBounds(
+                                rememberSharedContentState(key = "movie-${listId}-${item.posterPath}-bound"),
+                                animatedVisibilityScope = animatedVisibilityScope,
+                                clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(20.dp))
+                            )
+                    ) {
+                        AsyncImage(
+                            model = thumbnail,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .width(180.dp)
+                                .height(250.dp)
+                                .sharedElement(
+                                    rememberSharedContentState(key = "movie-${listId}-${item.posterPath}"),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                ),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
         }

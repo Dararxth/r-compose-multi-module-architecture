@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,52 +44,54 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppMaterialTheme {
                 // Track the currently selected top-level destination
-                var selectedTab by retain { mutableStateOf<NavKey>(AppNavKey.Dashboard) }
+                SharedTransitionLayout {
+                    var selectedTab by retain { mutableStateOf<NavKey>(AppNavKey.Dashboard) }
 
-                val dashboardNavigator = rememberNavigator(AppNavKey.Dashboard)
-                val transactionsNavigator = rememberNavigator(AppNavKey.Transactions)
-                val reportsNavigator = rememberNavigator(AppNavKey.Reports)
-                val profileNavigator = rememberNavigator(AppNavKey.Profile)
+                    val dashboardNavigator = rememberNavigator(AppNavKey.Dashboard)
+                    val transactionsNavigator = rememberNavigator(AppNavKey.Transactions)
+                    val reportsNavigator = rememberNavigator(AppNavKey.Reports)
+                    val profileNavigator = rememberNavigator(AppNavKey.Profile)
 
 
-                val appNavigator = when (selectedTab) {
-                    AppNavKey.Dashboard -> dashboardNavigator
-                    AppNavKey.Transactions -> transactionsNavigator
-                    AppNavKey.Reports -> reportsNavigator
-                    AppNavKey.Profile -> profileNavigator
-                    else -> dashboardNavigator
-                }
+                    val appNavigator = when (selectedTab) {
+                        AppNavKey.Dashboard -> dashboardNavigator
+                        AppNavKey.Transactions -> transactionsNavigator
+                        AppNavKey.Reports -> reportsNavigator
+                        AppNavKey.Profile -> profileNavigator
+                        else -> dashboardNavigator
+                    }
 
-                val entryProvider = remember(appNavigator) {
-                    AppNavigation(
-                        navigator = appNavigator,
-                        onSwitchTabs = { tabKey, destKey ->
-                            selectedTab = tabKey
-                            if (destKey != null) {
-                                val targetNavigator = when (tabKey) {
-                                    AppNavKey.Dashboard -> dashboardNavigator
-                                    AppNavKey.Transactions -> transactionsNavigator
-                                    AppNavKey.Reports -> reportsNavigator
-                                    AppNavKey.Profile -> profileNavigator
-                                    else -> null
+                    val entryProvider = remember(appNavigator) {
+                        AppNavigation(
+                            navigator = appNavigator,
+                            shareTransitionScope = this,
+                            onSwitchTabs = { tabKey, destKey ->
+                                selectedTab = tabKey
+                                if (destKey != null) {
+                                    val targetNavigator = when (tabKey) {
+                                        AppNavKey.Dashboard -> dashboardNavigator
+                                        AppNavKey.Transactions -> transactionsNavigator
+                                        AppNavKey.Reports -> reportsNavigator
+                                        AppNavKey.Profile -> profileNavigator
+                                        else -> null
+                                    }
+                                    targetNavigator?.navigate(destKey)
                                 }
-                                targetNavigator?.navigate(destKey)
                             }
-                        }
-                    ).get()
-                }
+                        ).get()
+                    }
 
-                Box(modifier = Modifier.fillMaxSize().background(Color.Black)){
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        key(selectedTab) {
-                            RootContent(appNavigator, entryProvider)
+                    Box(modifier = Modifier.fillMaxSize().background(Color.Black)){
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            key(selectedTab) {
+                                RootContent(appNavigator, entryProvider)
+                            }
                         }
                     }
                 }
-
             }
         }
     }

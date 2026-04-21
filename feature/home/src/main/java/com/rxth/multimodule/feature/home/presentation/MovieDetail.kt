@@ -1,5 +1,7 @@
 package com.rxth.multimodule.feature.home.presentation
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,65 +31,74 @@ import com.rxth.multimodule.feature.home.domain.model.Movie
 @Composable
 fun DetailScreen(
     movie: Movie,
+    listId: String,
+    shareTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     onBack: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent,
-            contentColor = Color.Transparent
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = padding.calculateBottomPadding())
-            ) {
-
-                val image = getImagePath(movie.posterPath)
-
-                ParallaxSnapColumn(
+    with(shareTransitionScope) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                containerColor = Color.Transparent,
+                contentColor = Color.Transparent
+            ) { padding ->
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    parallaxRate = 2,
-                    header = {
-                        Image(
-                            painter = rememberAsyncImagePainter(image),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 500.dp),
-                            contentScale = ContentScale.Crop
-                        )
-                    },
+                        .fillMaxSize()
+                        .padding(bottom = padding.calculateBottomPadding())
                 ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(900.dp)
-                            .background(Color.White)
-                    ) {
 
+                    val image = getImagePath(movie.posterPath)
+
+                    ParallaxSnapColumn(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        parallaxRate = 2,
+                        header = {
+                            Image(
+                                painter = rememberAsyncImagePainter(image),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 500.dp)
+                                    .sharedElement(
+                                        shareTransitionScope.rememberSharedContentState(key = "movie-${listId}-${movie.posterPath}"),
+                                        animatedVisibilityScope = animatedVisibilityScope
+                                    ),
+                                contentScale = ContentScale.Crop
+                            )
+                        },
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(900.dp)
+                                .background(Color.White)
+                        ) {
+
+                        }
                     }
                 }
+
+                Icon(
+                    imageVector = Icons.Outlined.ArrowBackIosNew,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .padding(start = 15.dp, top = padding.calculateTopPadding())
+                        .size(30.dp)
+
+                        .background(Color.White.copy(alpha = 0.3f), shape = CircleShape)
+                        .clickable(onClick = onBack)
+                        .clip(CircleShape)
+                        .padding(5.dp)
+                )
             }
-
-            Icon(
-                imageVector = Icons.Outlined.ArrowBackIosNew,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier
-                    .padding(start = 15.dp, top = padding.calculateTopPadding())
-                    .size(30.dp)
-
-                    .background(Color.White.copy(alpha = 0.3f), shape = CircleShape)
-                    .clickable(onClick = onBack)
-                    .clip(CircleShape)
-                    .padding(5.dp)
-            )
         }
     }
 }

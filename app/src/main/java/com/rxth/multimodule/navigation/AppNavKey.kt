@@ -10,6 +10,6 @@ sealed interface AppNavKey : NavKey {
     @Serializable data object Transactions : AppNavKey
     @Serializable data object Reports : AppNavKey
     @Serializable data object Profile : AppNavKey
-    @Serializable data class Detail(val movie: Movie) : AppNavKey
+    @Serializable data class Detail(val movie: Movie, val listId: String) : AppNavKey
     @Serializable data class AnotherDetail(val id: Int) : AppNavKey
 }

@@ -31,9 +31,9 @@ class HomeScreenViewModel(
         }
     }
     private fun loadAllMovies() {
-        getUpComingMovies()
-        getPopularMovies()
-        getNowPlayingMovies()
+        if (uiState.value.upComingMovies == null) getUpComingMovies()
+        if (uiState.value.popularMovies == null) getPopularMovies()
+        if (uiState.value.nowPlayingMovies == null) getNowPlayingMovies()
     }
 
 
