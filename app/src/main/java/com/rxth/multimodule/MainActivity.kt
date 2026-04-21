@@ -117,6 +117,23 @@ class MainActivity : ComponentActivity() {
                 )
             )
         }
+
+        val appPopTransition = remember {
+            ContentTransform(
+                targetContentEnter = fadeIn(
+                    animationSpec = tween(200)
+                ) + slideInHorizontally(
+                    animationSpec = tween(200),
+                    initialOffsetX = { -it / 8 }
+                ),
+                initialContentExit = fadeOut(
+                    animationSpec = tween(200)
+                ) + slideOutHorizontally(
+                    animationSpec = tween(200),
+                    targetOffsetX = { it / 8 }
+                )
+            )
+        }
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -130,8 +147,8 @@ class MainActivity : ComponentActivity() {
                 onBack = { appNavigator.pop() },
                 entryProvider = entryProvider,
                 transitionSpec = { appDefaultTransition },
-                popTransitionSpec = { appDefaultTransition },
-                predictivePopTransitionSpec = { appDefaultTransition }
+                popTransitionSpec = { appPopTransition },
+                predictivePopTransitionSpec = { appPopTransition }
             )
         }
     }
