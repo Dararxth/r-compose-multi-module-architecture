@@ -50,7 +50,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    api("androidx.constraintlayout:constraintlayout-compose:1.1.0")
+    api(libs.androidx.constraintlayout.compose)
     api(libs.haze.materials)
     api(libs.coil.compose)
     api(libs.haze.android)

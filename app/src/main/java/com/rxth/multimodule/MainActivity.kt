@@ -4,27 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -35,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -87,7 +78,7 @@ class MainActivity : ComponentActivity() {
                     ).get()
                 }
 
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize().background(Color.Black)){
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
@@ -107,10 +98,29 @@ class MainActivity : ComponentActivity() {
         appNavigator: Navigator,
         entryProvider: (NavKey) -> NavEntry<NavKey>
     ) {
+        val appDefaultTransition = remember {
+            ContentTransform(
+                targetContentEnter = fadeIn(
+                    animationSpec = tween(300)
+                ) + slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { it / 8 }
+                ),
+                initialContentExit = fadeOut(
+                    animationSpec = tween(300)
+                ) + slideOutHorizontally(
+                    animationSpec = tween(300),
+                    targetOffsetX = { -it / 8 }
+                )
+            )
+        }
         Box(
             modifier = Modifier
                 .weight(1f)
-                .clipToBounds() // Prevents animations from overlapping
+                .clipToBounds().graphicsLayer {
+                    renderEffect = null
+                    clip = true
+                } // Prevents animations from overlapping
         ) {
             NavDisplay(
                 backStack = appNavigator.backStack,
@@ -122,9 +132,6 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-
-    private val appDefaultTransition =
-        (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
 }
 
 data class NavigationItem(

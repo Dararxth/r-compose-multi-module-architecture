@@ -1,22 +1,17 @@
 package com.rxth.multimodule.feature.home.presentation
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +32,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -55,10 +51,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -66,16 +62,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.rxth.multimodule.core.network.RemoteHelper.getImagePath
+import com.rxth.multimodule.feature.home.R
 import com.rxth.multimodule.feature.home.domain.model.Movie
 import com.rxth.multimodule.feature.home.presentation.viewmodel.HomeScreenViewModel
 import dev.chrisbanes.haze.HazeProgressive
@@ -83,20 +79,18 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToDetails: () -> Unit
+    onNavigateToDetails: (Movie) -> Unit
 ) {
     val viewModel: HomeScreenViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
-    var isScrolled by remember { mutableStateOf(false) }
+    var isScrolled by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(scrollState) {
         var last = false
@@ -110,7 +104,6 @@ fun HomeScreen(
                 }
             }
     }
-    var expanded by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -133,7 +126,6 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .hazeSource(rootHazeState)
                 ) {
-                    val listUpcomingMovies = uiState.upComingMovies?.results.orEmpty()
 
                     Column(
                         modifier = Modifier
@@ -144,14 +136,22 @@ fun HomeScreen(
                     ) {
                         Spacer(modifier = Modifier.height(topBarHeight))
 
-                        val shuffledGroups = remember(listUpcomingMovies) {
-                            List(4) {
-                                listUpcomingMovies.shuffled()
-                            }
-                        }
-                        shuffledGroups.forEach {
-                            ListUpComingMovie(listUpcomingMovies = it)
-                        }
+                        MoviesListUi(
+                            listMovies = uiState.upComingMovies?.results.orEmpty(),
+                            header = "Coming Soon!",
+                            onMovieClick = onNavigateToDetails
+                        )
+                        MoviesListUi(
+                            listMovies = uiState.nowPlayingMovies?.results.orEmpty(),
+                            header = "Now Playing",
+                            onMovieClick = onNavigateToDetails
+                        )
+                        MoviesListUi(
+                            listMovies = uiState.popularMovies?.results.orEmpty(),
+                            header = "Popular",
+                            onMovieClick = onNavigateToDetails
+                        )
+                        Spacer(modifier = Modifier.height(padding.calculateBottomPadding()))
                     }
                 }
 
@@ -214,8 +214,7 @@ private fun AppBar(
                             start = 15.dp,
                             end = 15.dp
                         )
-                        .fillMaxWidth()
-                        .animateContentSize(),
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -229,8 +228,7 @@ private fun AppBar(
 
                     Row(
                         modifier = Modifier,
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Notifications,
@@ -241,19 +239,28 @@ private fun AppBar(
                         AnimatedVisibility(
                             visible = !isSearch
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Search,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier
-                                    .size(25.dp)
-                                    .sharedElement(
-                                        rememberSharedContentState("search"),
-                                        animatedVisibilityScope = this
-                                    )
-                                    .clickable { isSearch = true }
-                            )
+                            Row {
+                                Spacer(Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Outlined.Search,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(25.dp)
+                                        .sharedElement(
+                                            rememberSharedContentState("search"),
+                                            animatedVisibilityScope = this@AnimatedVisibility
+                                        )
+                                        .clickable { isSearch = true }
+                                )
+                            }
                         }
+                        Spacer(Modifier.width(8.dp))
+                        Image(
+                            painter = painterResource(R.drawable.ic_profile),
+                            contentDescription = null,
+                            modifier = Modifier.size(25.dp).clip(CircleShape)
+                        )
                     }
                 }
                 AnimatedVisibility(visible = isSearch) {
@@ -328,63 +335,6 @@ private fun AppBar(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-fun SearchAnimated() {
-
-    var expanded by remember { mutableStateOf(false) }
-
-    SharedTransitionLayout {
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            AnimatedVisibility(
-                visible = !expanded
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Search,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(25.dp)
-                        .sharedElement(
-                            rememberSharedContentState("search"),
-                            animatedVisibilityScope = this
-                        )
-                        .clickable { expanded = true }
-                )
-            }
-
-            AnimatedVisibility(
-                visible = expanded
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Icon(
-                        imageVector = Icons.Outlined.Search,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(25.dp)
-                            .sharedElement(
-                                rememberSharedContentState("search"),
-                                animatedVisibilityScope = this@AnimatedVisibility
-                            )
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text("Search...", color = Color.White)
-                }
-            }
-        }
-    }
-}
-
 @Composable
 private fun MovieCategories() {
     val movieCategories = listOf(
@@ -426,20 +376,26 @@ private fun MovieCategories() {
 }
 
 @Composable
-private fun ListUpComingMovie(modifier: Modifier = Modifier, listUpcomingMovies: List<Movie>) {
+private fun MoviesListUi(
+    listMovies: List<Movie>,
+    header: String,
+    modifier: Modifier = Modifier,
+    onMovieClick: (Movie) -> Unit
+) {
+    if (listMovies.isEmpty()) return
     Column(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(max = 300.dp)
             .padding(horizontal = 15.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
         Text(
-            text = "Coming Soon!",
+            text = header,
             style = MaterialTheme.typography.headlineMedium,
-            color = Color.White,
-            fontSize = 20.sp
+            color = Color.LightGray,
+            fontSize = 18.sp
         )
 
         LazyRow(
@@ -448,16 +404,18 @@ private fun ListUpComingMovie(modifier: Modifier = Modifier, listUpcomingMovies:
             verticalAlignment = Alignment.Top
         ) {
             items(
-                listUpcomingMovies.size,
-                key = { listUpcomingMovies[it].id }
+                listMovies.size,
+                key = { listMovies[it].id }
             ) {
 
-                val item = listUpcomingMovies[it]
-                val thumbnail = "https://image.tmdb.org/t/p/w500" + item.posterPath
+                val item = listMovies[it]
+                val thumbnail = getImagePath(item.posterPath)
                 ConstraintLayout(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .wrapContentWidth()
+                        .wrapContentWidth().clickable {
+                            onMovieClick(item) // 👈 add this
+                        }
                 ) {
                     AsyncImage(
                         model = thumbnail,
@@ -471,29 +429,3 @@ private fun ListUpComingMovie(modifier: Modifier = Modifier, listUpcomingMovies:
         }
     }
 }
-
-@OptIn(ExperimentalHazeMaterialsApi::class)
-@Composable
-private fun Modifier.blurryEffect(
-    haze: HazeState,
-    blurRadius: Dp = 10.dp,
-    color: Color = Color.White.copy(alpha = 0.15f)
-): Modifier {
-    return this.hazeEffect(
-        state = haze,
-        style = HazeMaterials.ultraThin().copy(
-            blurRadius = blurRadius,
-            noiseFactor = 0f,
-            tints = listOf(HazeTint(color = color))
-        )
-    )
-}
-
-fun Modifier.parallaxLayoutModifier(scrollState: ScrollState, rate: Int) =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        val height = if (rate > 0) scrollState.value / rate else scrollState.value
-        layout(placeable.width, placeable.height) {
-            placeable.place(0, height)
-        }
-    }

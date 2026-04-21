@@ -43,6 +43,11 @@ android {
                 "ACCESS_TOKEN",
                 "\"${credential.getProperty("ACCESS_TOKEN")}\""
             )
+            buildConfigField(
+                "String",
+                "IMAGE_URL",
+                "\"${credential.getProperty("IMAGE_URL")}\""
+            )
         }
     }
 

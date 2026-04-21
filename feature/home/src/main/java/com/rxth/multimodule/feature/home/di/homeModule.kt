@@ -4,9 +4,10 @@ import com.rxth.multimodule.core.network.constance.NetworkConstance
 import com.rxth.multimodule.feature.home.data.remote.HomeApiInterface
 import com.rxth.multimodule.feature.home.data.repository.HomeRepositoryImpl
 import com.rxth.multimodule.feature.home.domain.repository.HomeRepository
+import com.rxth.multimodule.feature.home.domain.usecase.GetNowPlayingMovieUseCase
+import com.rxth.multimodule.feature.home.domain.usecase.GetPopularMovieUseCase
 import com.rxth.multimodule.feature.home.domain.usecase.GetUpComingMovieUseCase
 import com.rxth.multimodule.feature.home.presentation.viewmodel.HomeScreenViewModel
-import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -27,6 +28,8 @@ val homeModule = module {
 
 
     factoryOf(::GetUpComingMovieUseCase)
+    factoryOf(::GetPopularMovieUseCase)
+    factoryOf(::GetNowPlayingMovieUseCase)
     viewModelOf(
         ::HomeScreenViewModel
 

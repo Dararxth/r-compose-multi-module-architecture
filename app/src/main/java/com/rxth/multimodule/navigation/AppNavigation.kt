@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.rxth.multimodule.SampleScreen
+import com.rxth.multimodule.feature.home.presentation.DetailScreen
 import com.rxth.multimodule.feature.home.presentation.HomeScreen
 import com.rxth.multimodule.navigation.tabs.TxnTab
 
@@ -15,7 +16,7 @@ class AppNavigation(
         return entryProvider {
             entry<AppNavKey.Dashboard> {
                 HomeScreen {
-                    onSwitchTabs(AppNavKey.Transactions, AppNavKey.Detail(1))
+                    navigator.navigate(AppNavKey.Detail(it))
                 }
             }
             entry<AppNavKey.Transactions> {
@@ -28,6 +29,12 @@ class AppNavigation(
             }
             entry<AppNavKey.Profile> {
                 SampleScreen("Profile Content")
+            }
+
+            entry<AppNavKey.Detail> {
+                DetailScreen(it.movie) {
+                    navigator.pop()
+                }
             }
         }
     }

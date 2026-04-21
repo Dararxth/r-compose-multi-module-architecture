@@ -2,20 +2,6 @@ package com.rxth.multimodule.feature.home.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-
-data class UpComingMoviesDto(
-    @SerializedName("dates") val dates: DatesDto?,
-    @SerializedName("page") val page: Int?,
-    @SerializedName("results") val results: List<MovieDto>?,
-    @SerializedName("total_pages") val totalPages: Int?,
-    @SerializedName("total_results") val totalResults: Int?
-)
-
-data class DatesDto(
-    @SerializedName("maximum") val maximum: String?,
-    @SerializedName("minimum") val minimum: String?
-)
-
 data class MovieDto(
     @SerializedName("adult") val adult: Boolean?,
     @SerializedName("backdrop_path") val backdropPath: String?,
